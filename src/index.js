@@ -5,6 +5,8 @@ const express = require('express');
 const {connect} = require('mongoose');
 const morgan = require('morgan');
 
+const {users} = require('./routes/api/');
+
 const app = express();
 
 var connection = connect(
@@ -20,7 +22,12 @@ app.set('port', process.env.PORT || 5000);
 // morgan gives us http request logging
 app.use(morgan('dev'));
 
+app.use(express.json());
+
 // TODO add additional routes here
+
+// user routes
+app.use('/api/users', users);
 
 // send a friendly greeting for the root route
 app.get('/', (req, res) => {
@@ -43,10 +50,10 @@ app.use((req, res) => {
 
 // global error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+    //console.error(err);
   res.status(err.status || 500).json({
     message: err.message,
-    error: {}
+    errors: err.errors ? err.errors : {}
   });
 });
 
@@ -54,3 +61,5 @@ app.use((err, req, res, next) => {
 const server = app.listen(app.get('port'), () => {
   console.log(`Express server is listening on port ${server.address().port}`);
 });
+
+module.exports = app;
