@@ -1,19 +1,20 @@
 const supertest = require('supertest');
+
 const app = require('../../src/index');
-const R = require('ramda');
+const {User} = require('../../src/models/');
 
 const result = done => (err, res) => {
     if (err) return done(err);
     return done();
 };
 
-describe('POST /api/users', function() {
-    const user = {
-        fullName: 'Michael Braga',
-        emailAddress: 'test@outlook.com',
-        password: 'abc123'
-    };
+const user = {
+    fullName: 'Michael Braga',
+    emailAddress: 'test@outlook.com',
+    password: 'abc123'
+};
 
+describe('POST /api/users', function() {
     it("returns a successful 201 response and Location header at '/'", function (done){
         supertest(app)
             .post('/api/users')
@@ -67,4 +68,57 @@ describe('POST /api/users', function() {
             })
             .end(result(done));
     });
+});
+
+describe('GET /api/user', function() {
+
+    it('return a 200 response with the proper User object', function(done) {
+        supertest(app)
+            .get('/api/users')
+            .auth(user.emailAddress, user.password)
+            .expect(res => res.body._id = 0)
+            .expect(200, {
+                _id: 0,
+                fullName: user.fullName,
+                emailAddress: user.emailAddress
+            })
+            .end(result(done));
+    });
+
+    it('returns a 401 if no Authorization header is found', function(done) {
+        supertest(app)
+            .get('/api/users')
+            .expect(401, {
+                message: 'Failed to authenticate.',
+                errors: {}
+            })
+            .end(result(done));
+    });
+
+    it('returns a 404 if no email is matched in the database', function(done) {
+        supertest(app)
+            .get('/api/users')
+            .auth('123fake@fake_email.com', '123abc')
+            .expect(404, {
+                message: 'No user was found.',
+                errors: {}
+            })
+            .end(result(done));
+    });
+
+    it('returns a 401 if passwords do not match', function(done) {
+        supertest(app)
+            .get('/api/users')
+            .auth(user.emailAddress, 'thiswasfail')
+            .expect(401, {
+                message: 'Failed to authenticate.',
+                errors: {}
+            })
+            .end(result(done));
+    });
+
+    after(function() {
+        return User.deleteOne({emailAddress: user.emailAddress})
+            .catch(console.error);
+    })
 });

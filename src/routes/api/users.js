@@ -3,6 +3,7 @@ const R = require('ramda');
 
 const {User} = require('../../models/');
 const {redirect} = require('../../modules/utils');
+const {authUser} = require('../../modules/auth');
 
 const {
     checkValidationError, 
@@ -11,8 +12,8 @@ const {
 
 const router = express.Router();
 
-router.get('/', (req, res, next) => {
-
+router.get('/', authUser, ({user}, res, next) => {
+    return res.json(user);
 });
 
 router.post('/', ({body}, res, next) => {

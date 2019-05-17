@@ -7,6 +7,11 @@ const rethrow = val => {
 
 const toError = R.construct(Error);
 
+const createError = R.useWith(
+    R.flip(setProp('status')), 
+    [toError, R.identity]
+);
+
 const validationError = R.pipe(
     R.props(['errors', '_message']),
     R.zipWith(R.call, [R.map(R.prop('message')), toError]),
@@ -36,4 +41,19 @@ const checkCastError = R.ifElse(
     rethrow
 );
 
-module.exports = {checkValidationError, checkCastError};
+const tThrowNewError = R.useWith(
+    R.pipe(R.flip(setProp('status')), rethrow), 
+    [toError, R.identity]
+);
+const throwNewError = R.thunkify(tThrowNewError);
+const throwNewErrorIf = R.curryN(3, function(x, message, statusCode) {
+    return R.when(R.equals(x), throwNewError(message, statusCode));
+});
+
+module.exports = {
+    createError,
+    toError,
+    checkValidationError, 
+    checkCastError, 
+    throwNewErrorIf
+};

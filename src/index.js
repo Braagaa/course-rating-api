@@ -19,9 +19,7 @@ var connection = connect(
 // set our port
 app.set('port', process.env.PORT || 5000);
 
-// morgan gives us http request logging
 app.use(morgan('dev'));
-
 app.use(express.json());
 
 // TODO add additional routes here

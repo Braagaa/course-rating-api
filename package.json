@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "nodemon ./src/index.js localhost 5000",
-    "vim": "vim ./src/*.js ./src/**/*.js",
+    "vim": "vim ./src/*.js ./src/**/*.js ./src/**/**/*.js",
     "test": "mocha --recursive --timeout 10000"
   },
   "author": "",
@@ -16,6 +16,7 @@
     "supertest": "^4.0.2"
   },
   "dependencies": {
+    "basic-auth": "^2.0.1",
     "bcrypt": "^3.0.6",
     "express": "^4.16.3",
     "isemail": "^3.2.0",

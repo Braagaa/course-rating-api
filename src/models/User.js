@@ -1,6 +1,11 @@
 const {Schema, model} = require('mongoose');
 const {validate: validEmail} = require('isemail');
-const {hash} = require('bcrypt');
+const {hash, compare} = require('bcrypt');
+const R = require('ramda');
+
+const {throwNewErrorIf} = require('../modules/error-handling');
+
+const auth = R.invoker(1, 'auth');
 
 const UserSchema = new Schema({
     fullName: {
@@ -20,10 +25,26 @@ const UserSchema = new Schema({
     },
     password: {type: String, required: [true, 'Password is required.']}
 });
+
 UserSchema.pre('save', function() {
     const user = this;
     return hash(user.password, 10)
         .then(hashPass => user.password = hashPass);
+});
+
+UserSchema.method('auth', function(password) {
+    const user = this;
+    const findById = R.thunkify(R.curryN(2, R.bind(User.findById, User)));
+    return compare(password, user.password)
+        .then(throwNewErrorIf(false, 'Failed to authenticate.', 401))
+        .then(findById({_id: user._id}, {__v: 0, password: 0}));
+});
+
+UserSchema.static('findAuth', (emailAddress, password) => {
+    return User.findOne({emailAddress}, {__v: 0})
+        .exec()
+        .then(throwNewErrorIf(null, 'No user was found.', 404))
+        .then(auth(password));
 });
 
 const User = model('User', UserSchema);
