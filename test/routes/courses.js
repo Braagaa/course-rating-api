@@ -38,6 +38,40 @@ describe('POST /api/courses', function() {
             .end(result(done));
     });
 
+    it("returns a 422 if required fields aren't found", function(done) {
+        supertest(app)
+            .post('/api/courses')
+            .send({steps: [{}]})
+            .auth(user.emailAddress, user.password)
+            .expect(422, {
+                message: 'Course validation failed',
+                errors: {
+                    title: 'Title is required.',
+                    description: 'Description is required.',
+                    "steps.0.title": 'Title for steps required.',
+                    "steps.0.description": "Description for steps required."
+                }
+            })
+            .end(result(done));
+    });
+
+    it('returns a 422 if a string tries to passed as a number for Course.steps.0.stepNumber', function(done) {
+        supertest(app)
+            .post('/api/courses')
+            .send({
+                ...course,
+                steps: [{title: 'Easy Pz', description: 'Nothing', stepNumber: 'error'}]
+            })
+            .auth(user.emailAddress, user.password)
+            .expect(422, {
+                message: 'Course validation failed',
+                errors: {
+                    "steps.0.stepNumber": "Cast to Number failed for value \"error\" at path \"stepNumber\""
+                }
+            })
+            .end(result(done));
+    });
+
     it('returns a 401 (no Authorization header)', function(done) {
         supertest(app)
             .post('/api/courses')
