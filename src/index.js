@@ -5,7 +5,7 @@ const express = require('express');
 const {connect} = require('mongoose');
 const morgan = require('morgan');
 
-const {users} = require('./routes/api/');
+const {users, courses} = require('./routes/api/');
 
 const app = express();
 
@@ -26,6 +26,9 @@ app.use(express.json());
 
 // user routes
 app.use('/api/users', users);
+
+// course routes
+app.use('/api/courses', courses);
 
 // send a friendly greeting for the root route
 app.get('/', (req, res) => {
