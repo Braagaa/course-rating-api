@@ -1,4 +1,5 @@
 const supertest = require('supertest');
+const R = require('ramda');
 
 const app = require('../../src/index');
 const {User, Course} = require('../../src/models/');
@@ -85,6 +86,23 @@ describe('POST /api/courses', function(done) {
                 message: 'Failed to authenticate.',
                 errors: {}
             })
+            .end(result(done));
+    });
+});
+
+describe('GET /api/courses', function() {
+    it('returns a JSON 200 response with array of all Course Documents', function(done) {
+        supertest(app)
+            .get('/api/courses')
+            .expect(res => {
+                if (course.length > 0) {
+                    const course = res.body[0];
+                    if (!('title' in course) || !('_id' in course)) {
+                        throw new Error('Wrong Step document found.');
+                    }
+                }
+            })
+            .expect(200)
             .end(result(done));
     });
 

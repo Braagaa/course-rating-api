@@ -3,13 +3,15 @@ const R = require('ramda');
 
 const {Course} = require('../../models/');
 const {authUser} = require('../../modules/auth');
-const {redirect} = require('../../modules/utils');
+const {redirect, json} = require('../../modules/utils');
 const {checkValidationError} = require('../../modules/error-handling');
 
 const router = express.Router();
 
 router.get('/', (req, res, next) => {
     return Course.find({}, {title: 1})
+        .then(json(R.__, res))
+        .catch(next);
 });
 
 router.post('/', authUser, (req, res, next) => {
