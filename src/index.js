@@ -19,7 +19,9 @@ var connection = connect(
 // set our port
 app.set('port', process.env.PORT || 5000);
 
-app.use(morgan('dev'));
+if (app.get('env') != 'test') {
+    app.use(morgan('dev'));
+}
 app.use(express.json());
 
 // TODO add additional routes here
@@ -59,8 +61,10 @@ app.use((err, req, res, next) => {
 });
 
 // start listening on our port
-const server = app.listen(app.get('port'), () => {
-  console.log(`Express server is listening on port ${server.address().port}`);
-});
+if (app.get('env') != 'test') {
+    const server = app.listen(app.get('port'), () => {
+      console.log(`Express server is listening on port ${server.address().port}`);
+    });
+}
 
 module.exports = app;

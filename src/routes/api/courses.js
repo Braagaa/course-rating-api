@@ -8,6 +8,10 @@ const {checkValidationError} = require('../../modules/error-handling');
 
 const router = express.Router();
 
+router.get('/', (req, res, next) => {
+    return Course.find({}, {title: 1})
+});
+
 router.post('/', authUser, (req, res, next) => {
     const {user, body} = req;
     return Course.create({user: user._id, ...body})

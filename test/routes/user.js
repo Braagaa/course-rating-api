@@ -14,7 +14,16 @@ const user = {
     password: 'abc123'
 };
 
+app.set('env', 'test');
+
+let server;
+
 describe('POST /api/users', function() {
+    before(function(done) {
+        server = app.listen(app.get('port'), done);
+    });
+
+
     it("returns a successful 201 response and Location header at '/'", function (done){
         supertest(app)
             .post('/api/users')
@@ -119,6 +128,7 @@ describe('GET /api/user', function() {
 
     after(function() {
         return User.deleteOne({emailAddress: user.emailAddress})
+            .then(() => server.close())
             .catch(console.error);
     })
 });

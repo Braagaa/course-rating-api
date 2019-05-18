@@ -19,9 +19,14 @@ const user = {
     password: 'abc123'
 };
 
-describe('POST /api/courses', function() {
+app.set('env', 'test');
+
+let server;
+
+describe('POST /api/courses', function(done) {
     before(function() {
         return User.create(user)
+            .then(() => server = app.listen(app.get('port'), done))
             .catch(console.error);
     });
 
@@ -86,6 +91,7 @@ describe('POST /api/courses', function() {
     after(function() {
         return User.deleteOne({emailAddress: user.emailAddress})
             .then(() => Course.deleteOne({title: course.title}))
+            .then(() => server.close())
             .catch(console.error);
     })
 });

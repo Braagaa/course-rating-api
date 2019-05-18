@@ -6,11 +6,12 @@
   "scripts": {
     "start": "nodemon ./src/index.js localhost 5000",
     "vim": "vim ./src/*.js ./src/**/*.js ./src/**/**/*.js",
-    "test": "mocha --recursive --timeout 10000"
+    "test": "cross-env NODE_ENV=test mocha --recursive --timeout 10000"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "cross-env": "^5.2.0",
     "mocha": "^6.1.4",
     "nodemon": "^1.17.5",
     "supertest": "^4.0.2"
