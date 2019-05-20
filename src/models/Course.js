@@ -27,6 +27,17 @@ const CourseSchema = new Schema({
     reviews: [{type: Schema.Types.ObjectId, ref: 'Review'}]
 });
 
+CourseSchema.static('findPopulate', function(id) {
+    return Course.findById(id, {__v: 0})
+        .populate({path: 'user', select: 'fullName'})
+        .populate({
+            path: 'reviews', 
+            select: {__v: 0},
+            populate: {path: 'user', select: 'fullName'}
+        })
+        .exec();
+});
+
 const Course = model('Course', CourseSchema);
 
 module.exports = Course;

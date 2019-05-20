@@ -20,13 +20,30 @@ const user = {
     password: 'abc123'
 };
 
+const getResPath = R.useWith(R.path, [R.concat(['body']), R.identity]);
+
+const testProp = (path, pred, message) => res => {
+    const obj = getResPath(path, res);
+    if (!pred(obj)) throw new Error(message);
+};
+
+const hasProps = (path, props, message) => res => {
+    const obj = getResPath(path, res);
+    props.forEach(prop => {
+        if (!(prop in obj))
+            throw new Error(message);
+    });
+};
+
+const keysEqual2 = R.pipe(R.keys, R.length, R.equals(2));
+
 app.set('env', 'test');
 
 let server;
 
 describe('POST /api/courses', function(done) {
     before(function() {
-        return User.create(user)
+        return Promise.all([User.create(user)])
             .then(() => server = app.listen(app.get('port'), done))
             .catch(console.error);
     });
@@ -105,9 +122,30 @@ describe('GET /api/courses', function() {
             .expect(200)
             .end(result(done));
     });
+});
+
+describe('/GET /api/courses/:courseId', function() {
+    it('returns 200 with appropriate Course Document', function(done) {
+        Course.findById('57029ed4795118be119cc43d', {__v: 0})
+            .exec()
+            .then(course => {
+                supertest(app)
+                    .get(`/api/courses/${course._id}`)
+                    .expect(testProp(['user'], keysEqual2, 'User object in Course is invalid'))
+                    .expect(hasProps(['user'], ['_id', 'fullName'], '_id or fullName prop not found in User Document'))
+                    .expect(testProp(['reviews', 0, 'user'], keysEqual2, 'User object in Course.reviews is invalid'))
+                    .expect(hasProps(['reviews', 0, 'user'], ['_id', 'fullName'], '_id or fullName prop not found in User Docuemnt of Course.reviews'))
+                    .expect(200)
+                    .end(result(done));
+            });
+            
+    });
 
     after(function() {
-        return User.deleteOne({emailAddress: user.emailAddress})
+        return Promise.all([
+            User.deleteOne({emailAddress: user.emailAddress}),
+            Course.deleteOne({title: course.title})
+        ])
             .then(() => Course.deleteOne({title: course.title}))
             .then(() => server.close())
             .catch(console.error);
