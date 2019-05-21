@@ -50,13 +50,19 @@ const throwNewErrorIf = R.curryN(3, function(x, message, statusCode) {
     return R.when(R.equals(x), throwNewError(message, statusCode));
 });
 
-const ifCastError = R.when(R.propEq('name', 'CastError'));
+const invalidId = R.curryN(3, function(message, status, error) {
+    if (error.name === 'CastError' && error.message.includes('ObjectId')) {
+        throw createError(message, status);
+    }
+
+    throw error;
+});
 
 module.exports = {
     createError,
     toError,
     checkValidationError, 
-    ifCastError,
+    invalidId,
     checkCastError, 
     throwNewErrorIf
 };

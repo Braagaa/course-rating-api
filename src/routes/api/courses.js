@@ -30,8 +30,8 @@ router.post('/', authUser, (req, res, next) => {
         .catch(next);
 });
 
-router.put('/:courseId', (req, res, next) => {
-    
+router.put('/:courseId', authUser, ({course}, res, next) => {
+    if (!course) return res.end();
 });
 
 module.exports = router;

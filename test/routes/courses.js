@@ -110,7 +110,10 @@ describe('/GET /api/courses/:courseId', function() {
     it ('returns 404 with null when id is invalid or id does not exist', function(done) {
         supertest(app)
             .get('/api/courses/doesnotwork')
-            .expect(404, null)
+            .expect(404, {
+                message: 'Course could not be found.',
+                errors: {}
+            })
             .end(result(done));
     });
     

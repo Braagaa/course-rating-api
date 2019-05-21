@@ -2,15 +2,14 @@ const R = require('ramda');
 
 const {Course} = require('../models/');
 const {setProp, status, callNoArg} = require('./utils');
-const {ifCastError} = require('./error-handling');
+const {invalidId} = require('./error-handling');
 
 const courseParam = function(req, res, next, id) {
     const status404 = R.thunkify(status(404));
     return Course.findPopulate(id)
-        .catch(ifCastError(R.always(null)))
         .then(setProp('course', R.__, req))
-        .then(R.when(R.propEq('course', null), status404(res)))
         .then(callNoArg(next))
+        .catch(invalidId('Course could not be found.', 404))
         .catch(next);
 };
 
