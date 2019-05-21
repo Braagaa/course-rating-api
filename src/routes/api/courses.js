@@ -17,8 +17,8 @@ router.get('/', (req, res, next) => {
         .catch(next);
 });
 
-router.get('/:courseId', (req, res, next) => {
-    return res.json(req.course);
+router.get('/:courseId', ({course}, res, next) => {
+    return res.json(course);
 });
 
 router.post('/', authUser, (req, res, next) => {

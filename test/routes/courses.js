@@ -21,23 +21,6 @@ const user = {
     password: 'abc123'
 };
 
-const getResPath = R.useWith(R.path, [R.concat(['body']), R.identity]);
-
-const testProp = (path, pred, message) => res => {
-    const obj = getResPath(path, res);
-    if (!pred(obj)) throw new Error(message);
-};
-
-const hasProps = (path, props, message) => res => {
-    const obj = getResPath(path, res);
-    props.forEach(prop => {
-        if (!(prop in obj))
-            throw new Error(message);
-    });
-};
-
-const keysEqual2 = R.pipe(R.keys, R.length, R.equals(2));
-
 app.set('env', 'test');
 
 let server;
@@ -124,10 +107,10 @@ describe('/GET /api/courses/:courseId', function() {
             
     });
     
-    it ('returns 200 with empty object when no id was found in Course database', function(done) {
+    it ('returns 404 with null when id is invalid or id does not exist', function(done) {
         supertest(app)
-            .get('/api/courses/57029ed4795118be119cc438')
-            .expect(200, {})
+            .get('/api/courses/doesnotwork')
+            .expect(404, null)
             .end(result(done));
     });
     
