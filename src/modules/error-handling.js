@@ -61,6 +61,7 @@ const invalidId = R.curryN(3, function(message, status, error) {
 module.exports = {
     createError,
     toError,
+    throwNewErrorIf,
     checkValidationError, 
     invalidId,
     checkCastError, 

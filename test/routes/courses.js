@@ -107,9 +107,19 @@ describe('/GET /api/courses/:courseId', function() {
             
     });
     
-    it ('returns 404 with null when id is invalid or id does not exist', function(done) {
+    it('returns 404 when id is invalid', function(done) {
         supertest(app)
             .get('/api/courses/doesnotwork')
+            .expect(404, {
+                message: 'Course could not be found.',
+                errors: {}
+            })
+            .end(result(done));
+    });
+
+    it('returns 404 when id does not match a Course Document in the database', function(done) {
+        supertest(app)
+            .get('/api/courses/57029ed4795118be119cc41e')
             .expect(404, {
                 message: 'Course could not be found.',
                 errors: {}
@@ -125,5 +135,5 @@ describe('/GET /api/courses/:courseId', function() {
             .then(() => Course.deleteOne({title: course.title}))
             .then(() => server.close())
             .catch(console.error);
-    })
+    });
 });
