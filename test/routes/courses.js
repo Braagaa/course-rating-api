@@ -3,6 +3,7 @@ const R = require('ramda');
 
 const app = require('../../src/index');
 const {User, Course} = require('../../src/models/');
+const {propEq, onlyHasProps} = require('../../src/modules/assertions');
 
 const result = done => (err, res) => {
     if (err) return done(err);
@@ -66,15 +67,9 @@ describe('POST /api/courses', function(done) {
             .post('/api/courses')
             .send({steps: [{}]})
             .auth(user.emailAddress, user.password)
-            .expect(422, {
-                message: 'Course validation failed',
-                errors: {
-                    title: 'Title is required.',
-                    description: 'Description is required.',
-                    "steps.0.title": 'Title for steps required.',
-                    "steps.0.description": "Description for steps required."
-                }
-            })
+            .expect(propEq('message', 'Course validation failed'))
+            .expect(onlyHasProps(['errors'], ['title', 'description', 'steps.0.title', 'steps.0.description']))
+            .expect(422)
             .end(result(done));
     });
 
@@ -86,12 +81,9 @@ describe('POST /api/courses', function(done) {
                 steps: [{title: 'Easy Pz', description: 'Nothing', stepNumber: 'error'}]
             })
             .auth(user.emailAddress, user.password)
-            .expect(422, {
-                message: 'Course validation failed',
-                errors: {
-                    "steps.0.stepNumber": "Cast to Number failed for value \"error\" at path \"stepNumber\""
-                }
-            })
+            .expect(propEq('message', 'Course validation failed'))
+            .expect(onlyHasProps(['errors'], ['steps.0.stepNumber']))
+            .expect(422)
             .end(result(done));
     });
 
@@ -111,14 +103,7 @@ describe('GET /api/courses', function() {
     it('returns a JSON 200 response with array of all Course Documents', function(done) {
         supertest(app)
             .get('/api/courses')
-            .expect(res => {
-                if (course.length > 0) {
-                    const course = res.body[0];
-                    if (!('title' in course) || !('_id' in course)) {
-                        throw new Error('Wrong Step document found.');
-                    }
-                }
-            })
+            .expect(onlyHasProps([0], ['_id', 'title']))
             .expect(200)
             .end(result(done));
     });
@@ -131,16 +116,21 @@ describe('/GET /api/courses/:courseId', function() {
             .then(course => {
                 supertest(app)
                     .get(`/api/courses/${course._id}`)
-                    .expect(testProp(['user'], keysEqual2, 'User object in Course is invalid'))
-                    .expect(hasProps(['user'], ['_id', 'fullName'], '_id or fullName prop not found in User Document'))
-                    .expect(testProp(['reviews', 0, 'user'], keysEqual2, 'User object in Course.reviews is invalid'))
-                    .expect(hasProps(['reviews', 0, 'user'], ['_id', 'fullName'], '_id or fullName prop not found in User Docuemnt of Course.reviews'))
+                    .expect(onlyHasProps(['user'], ['_id', 'fullName']))
+                    .expect(onlyHasProps(['reviews', 0, 'user'], ['_id', 'fullName']))
                     .expect(200)
                     .end(result(done));
             });
             
     });
-
+    
+    it ('returns 200 with empty object when no id was found in Course database', function(done) {
+        supertest(app)
+            .get('/api/courses/57029ed4795118be119cc438')
+            .expect(200, {})
+            .end(result(done));
+    });
+    
     after(function() {
         return Promise.all([
             User.deleteOne({emailAddress: user.emailAddress}),

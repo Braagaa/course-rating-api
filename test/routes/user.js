@@ -2,6 +2,7 @@ const supertest = require('supertest');
 
 const app = require('../../src/index');
 const {User} = require('../../src/models/');
+const {propEq, onlyHasProps} = require('../../src/modules/assertions');
 
 const result = done => (err, res) => {
     if (err) return done(err);
@@ -50,14 +51,9 @@ describe('POST /api/users', function() {
         supertest(app)
             .post('/api/users')
             .send({})
-            .expect(422, {
-                message: 'User validation failed',
-                errors: {
-                    emailAddress: 'Email is required.',
-                    fullName: 'Full name is required.',
-                    password: 'Password is required.'
-                }
-            })
+            .expect(propEq('message', 'User validation failed'))
+            .expect(onlyHasProps(['errors'], ['emailAddress', 'fullName', 'password']))
+            .expect(422)
             .end(result(done));
     })
 
@@ -69,12 +65,8 @@ describe('POST /api/users', function() {
                 emailAddress: 'fake123',
                 password: '123abc'
             })
-            .expect(422, {
-                message: 'User validation failed',
-                errors: {
-                    emailAddress: 'fake123 is not a valid email.'
-                }
-            })
+            .expect(propEq('message', 'User validation failed'))
+            .expect(onlyHasProps(['errors'], ['emailAddress']))
             .end(result(done));
     });
 });

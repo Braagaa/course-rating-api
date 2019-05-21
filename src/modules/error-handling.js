@@ -14,7 +14,7 @@ const createError = R.useWith(
 
 const validationError = R.pipe(
     R.props(['errors', '_message']),
-    R.zipWith(R.call, [R.map(R.prop('message')), toError]),
+    R.adjust(1, toError),
     R.apply(setProp('errors')),
     setProp('status', 422),
 );

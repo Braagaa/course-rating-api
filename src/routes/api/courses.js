@@ -31,7 +31,7 @@ router.post('/', authUser, (req, res, next) => {
 });
 
 router.put('/:courseId', (req, res, next) => {
-
+    
 });
 
 module.exports = router;
