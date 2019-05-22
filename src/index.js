@@ -34,7 +34,7 @@ app.use('/api/courses', courses);
 
 // send a friendly greeting for the root route
 app.get('/', (req, res) => {
-  res.json({
+    res.json({
     message: 'Welcome to the Course Review API'
   });
 });

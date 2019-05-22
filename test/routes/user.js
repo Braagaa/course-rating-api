@@ -30,8 +30,8 @@ describe('POST /api/users', function() {
             .post('/api/users')
             .send(user)
             .set('Accept', 'application/json')
-            .expect(201)
             .expect('Location', '/')
+            .expect(201)
             .end(result(done));
     });
 

@@ -2,7 +2,7 @@ const express = require('express');
 const R = require('ramda');
 
 const {User} = require('../../models/');
-const {redirect} = require('../../modules/utils');
+const {status, set, end} = require('../../modules/utils');
 const {authUser} = require('../../modules/auth');
 
 const {
@@ -19,7 +19,9 @@ router.get('/', authUser, ({user}, res, next) => {
 router.post('/', ({body}, res, next) => {
     return User.create(body)
         .then(R.always(res))
-        .then(redirect(201, '/'))
+        .then(status(201))
+        .then(R.tap(set('Location', '/')))
+        .then(end)
         .catch(checkValidationError)
         .catch(checkCustomErrors)
         .catch(next);

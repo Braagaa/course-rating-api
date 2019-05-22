@@ -9,7 +9,7 @@ const callNoArg = fn => () => fn();
 
 const json = R.invoker(1, 'json');
 const status = R.invoker(1, 'status');
-const redirect = R.invoker(2, 'redirect');
+const set = R.invoker(2, 'set');
 const end = R.invoker(0, 'end');
 const statusJson = R.pipe(status, R.flip(json));
 
@@ -17,8 +17,8 @@ module.exports = {
     json, 
     statusJson, 
     status, 
+    set,
     end,
-    redirect, 
     setProp, 
     callNoArg
 };

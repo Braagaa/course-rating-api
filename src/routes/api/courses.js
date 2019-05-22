@@ -3,7 +3,7 @@ const R = require('ramda');
 
 const {Course} = require('../../models/');
 const {authUser} = require('../../modules/auth');
-const {redirect, json, status, end} = require('../../modules/utils');
+const {set, json, status, end} = require('../../modules/utils');
 const {courseParam, checkUsersCourse} = require('../../modules/middleware');
 const {
     checkValidationError,
@@ -28,7 +28,9 @@ router.post('/', authUser, (req, res, next) => {
     const {user, body} = req;
     return Course.create({user: user._id, ...body})
         .then(R.always(res))
-        .then(redirect(201, '/'))
+        .then(status(201))
+        .then(R.tap(set('Location', '/')))
+        .then(end)
         .catch(checkValidationError)
         .catch(next);
 });
