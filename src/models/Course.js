@@ -17,11 +17,11 @@ const CourseSchema = new Schema({
         stepNumber: Number, 
         title: {
             type: String,
-            required: [true, 'Title for steps required.']
+            required: true
         }, 
         description: {
             type: String,
-            required: [true, 'Description for steps required.']
+            required: true
         }
     }],
     reviews: [{type: Schema.Types.ObjectId, ref: 'Review'}]

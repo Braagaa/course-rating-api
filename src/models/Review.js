@@ -1,4 +1,5 @@
 const {Schema, model} = require('mongoose');
+const {createError} = require('../modules/error-handling');
 
 const ReviewSchema = new Schema({
     user: {type: Schema.Types.ObjectId, ref: 'User'},
@@ -9,7 +10,7 @@ const ReviewSchema = new Schema({
 ReviewSchema.pre('save', function(next) {
     const {course, user} = this;
     if (course.user._id === user._id) {
-        throw new Error('You cannot review your own course.');
+        throw createError('You cannot review your own course.', 422);
     }
     next();
 });

@@ -9,7 +9,6 @@ const authUser = function(req, res, next) {
     const user = auth(req);
     
     if (!user) return next(createError('Failed to authenticate.', 401));
-
     return User.findAuth(user.name, user.pass)
         .then(setProp('user', R.__, req))
         .then(callNoArg(next))

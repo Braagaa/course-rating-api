@@ -21,13 +21,25 @@ const user = {
     password: 'abc123'
 };
 
+const guy = {
+    fullName: 'Brago',
+    emailAddress: '123@fake.com',
+    password: 'abc123'
+};
+
 app.set('env', 'test');
 
 let server;
+let user2;
+let user3;
 
 describe('POST /api/courses', function(done) {
     before(function() {
-        return Promise.all([User.create(user)])
+        return Promise.all([User.create(user), User.create(guy)])
+            .then(([u1, u2]) => {
+                user2 = u1;
+                user3 = u2;
+            })
             .then(() => server = app.listen(app.get('port'), done))
             .catch(console.error);
     });
@@ -92,7 +104,7 @@ describe('GET /api/courses', function() {
     });
 });
 
-describe('/GET /api/courses/:courseId', function() {
+describe('GET /api/courses/:courseId', function() {
     it('returns 200 with appropriate Course Document', function(done) {
         Course.findById('57029ed4795118be119cc43d', {__v: 0})
             .exec()
@@ -126,10 +138,114 @@ describe('/GET /api/courses/:courseId', function() {
             })
             .end(result(done));
     });
+});
+
+describe('PUT /api/courses/:courseId', function() {
+    it('returns 204 when Course Document successfully updates', function(done) {
+        Course.create({title: course.title, description: course.description, user: user2._id})
+            .then(course => {
+                supertest(app)
+                    .put(`/api/courses/${course._id}`)
+                    .send({
+                        title: 'New Title',
+                        description: 'New description',
+                    })
+                    .auth(user2.emailAddress, user.password)
+                    .expect(204)
+                    .end((err, res) => {
+                        if (err) return done(err);
+                        Course.deleteOne({_id: course._id})
+                            .then(() => done());
+                    });
+            });
+    });
+    
+    it('returns 422 when there are validation errors found', function(done) {
+        Course.create({title: 'test', description: 'test', user: user2._id})
+            .then(course => {
+                supertest(app)
+                    .put(`/api/courses/${course._id}`)
+                    .send({steps: [{}]})
+                    .auth(user.emailAddress, user.password)
+                    .expect(propEq('message', 'Validation failed'))
+                    .expect(onlyHasProps(['errors'], ['steps.0.description', 'steps.0.title']))
+                    .expect(422)
+                    .end((err, res) => {
+                        Course.deleteOne({_id: course._id})
+                            .then(() => {
+                                if (err) return done(err);
+                                return done();
+                            });
+                    });
+            });
+    });
+
+    it('returns 422 when there are cast errors for steps.stepNumber', function(done) {
+        Course.create({title: 'test', description: 'test', user: user2._id})
+            .then(course => {
+                supertest(app)
+                    .put(`/api/courses/${course._id}`)
+                    .send({steps: [{stepNumber: 'a', title: 'hi', description: 'bye'}]})
+                    .auth(user.emailAddress, user.password)
+                    .expect(422, {
+                        message:  "Cast to embedded failed for value \"{ stepNumber: \\'a\\', title: \\'hi\\', description: \\'bye\\' }\" at path \"steps\"",
+                        errors: {}
+                    })
+                    .end((err, res) => {
+                        Course.deleteOne({_id: course._id})
+                            .then(() => {
+                                if (err) return done(err);
+                                return done();
+                            });
+                    });
+            });
+    });
+
+    it('returns 403 if user tries to update a course they did not create', function(done) {
+        Course.create({title: 'test', description: 'test', user: user2._id})
+            .then(course => {
+                supertest(app)
+                    .put(`/api/courses/${course._id}`)
+                    .send({})
+                    .auth(guy.emailAddress, guy.password)
+                    .expect(403, {
+                        message: "Can only update user's created courses.",
+                        errors: {}
+                    })
+                    .end((err, res) => {
+                        Course.deleteOne({_id: course._id})
+                            .then(() => {
+                                if (err) return done(err);
+                                return done();
+                            });
+                    });
+            });
+    });
+
+    it('returns 401 (no auth header)', function(done) {
+        Course.create({title: 'test', description: 'test', user: user2._id})
+            .then(course => {
+                supertest(app)
+                    .put(`/api/courses/${course._id}`)
+                    .send({})
+                    .expect(401, {
+                        message: 'Failed to authenticate.',
+                        errors: {}
+                    })
+                    .end((err, res) => {
+                        Course.deleteOne({_id: course._id})
+                            .then(() => {
+                                if (err) return done(err);
+                                return done();
+                            });
+                    });
+            });
+    });
     
     after(function() {
         return Promise.all([
             User.deleteOne({emailAddress: user.emailAddress}),
+            User.deleteOne({emailAddress: guy.emailAddress}),
             Course.deleteOne({title: course.title})
         ])
             .then(() => Course.deleteOne({title: course.title}))

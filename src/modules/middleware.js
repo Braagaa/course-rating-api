@@ -2,7 +2,11 @@ const R = require('ramda');
 
 const {Course} = require('../models/');
 const {setProp, status, callNoArg} = require('./utils');
-const {invalidId, throwNewErrorIf} = require('./error-handling');
+const {
+    invalidId, 
+    throwNewErrorIf, 
+    createError
+} = require('./error-handling');
 
 const courseParam = function(req, res, next, id) {
     const status404 = R.thunkify(status(404));
@@ -15,4 +19,10 @@ const courseParam = function(req, res, next, id) {
         .catch(next);
 };
 
-module.exports = {courseParam};
+const checkUsersCourse = function({user, course}, res, next) {
+    if (course.user.id != user.id)
+        return next(createError("Can only update user's created courses.", 403));
+    next();
+}
+
+module.exports = {courseParam, checkUsersCourse};

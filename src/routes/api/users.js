@@ -7,7 +7,7 @@ const {authUser} = require('../../modules/auth');
 
 const {
     checkValidationError, 
-    checkCastError
+    checkCustomErrors
 } = require('../../modules/error-handling');
 
 const router = express.Router();
@@ -21,7 +21,7 @@ router.post('/', ({body}, res, next) => {
         .then(R.always(res))
         .then(redirect(201, '/'))
         .catch(checkValidationError)
-        .catch(checkCastError)
+        .catch(checkCustomErrors)
         .catch(next);
 });
 

@@ -3,9 +3,12 @@ const R = require('ramda');
 
 const {Course} = require('../../models/');
 const {authUser} = require('../../modules/auth');
-const {redirect, json} = require('../../modules/utils');
-const {courseParam} = require('../../modules/middleware');
-const {checkValidationError} = require('../../modules/error-handling');
+const {redirect, json, status, end} = require('../../modules/utils');
+const {courseParam, checkUsersCourse} = require('../../modules/middleware');
+const {
+    checkValidationError,
+    checkCastError
+} = require('../../modules/error-handling');
 
 const router = express.Router();
 
@@ -30,8 +33,15 @@ router.post('/', authUser, (req, res, next) => {
         .catch(next);
 });
 
-router.put('/:courseId', authUser, ({course}, res, next) => {
-    if (!course) return res.end();
+router.put('/:courseId', authUser, checkUsersCourse, (req, res, next) => {
+    const {course, body} = req;
+    return course.update(body, {runValidators: true})
+        .then(R.always(res))
+        .then(status(204))
+        .then(end)
+        .catch(checkValidationError)
+        .catch(checkCastError)
+        .catch(next);
 });
 
 module.exports = router;

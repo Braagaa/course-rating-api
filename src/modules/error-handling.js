@@ -35,7 +35,7 @@ const castError = R.pipe(
     setProp('status', 422)
 );
 
-const checkCastError = R.ifElse(
+const checkCustomErrors = R.ifElse(
     R.propEq('code', 11000),
     R.pipe(castError, rethrow),
     rethrow
@@ -58,10 +58,17 @@ const invalidId = R.curryN(3, function(message, status, error) {
     throw error;
 });
 
+const checkCastError = R.ifElse(
+    R.propEq('name', 'CastError'),
+    R.pipe(R.prop('message'), toError, setProp('status', 422), rethrow),
+    rethrow
+);
+
 module.exports = {
     createError,
     toError,
     throwNewErrorIf,
+    checkCustomErrors,
     checkValidationError, 
     invalidId,
     checkCastError, 
