@@ -5,7 +5,7 @@ const R = require('ramda');
 
 const {throwNewErrorIf} = require('../modules/error-handling');
 
-const auth = R.invoker(1, 'auth');
+const comparepass = R.invoker(1, 'comparepass');
 
 const UserSchema = new Schema({
     fullName: {
@@ -32,7 +32,7 @@ UserSchema.pre('save', function() {
         .then(hashPass => user.password = hashPass);
 });
 
-UserSchema.method('auth', function(password) {
+UserSchema.method('comparepass', function(password) {
     const user = this;
     const findById = R.thunkify(R.curryN(2, R.bind(User.findById, User)));
     return compare(password, user.password)
@@ -40,11 +40,11 @@ UserSchema.method('auth', function(password) {
         .then(findById({_id: user._id}, {__v: 0, password: 0}));
 });
 
-UserSchema.static('findAuth', (emailAddress, password) => {
+UserSchema.static('authenticate', (emailAddress, password) => {
     return User.findOne({emailAddress}, {__v: 0})
         .exec()
         .then(throwNewErrorIf(null, 'No user was found.', 404))
-        .then(auth(password));
+        .then(comparepass(password));
 });
 
 const User = model('User', UserSchema);
