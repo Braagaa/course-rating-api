@@ -2,7 +2,7 @@ const supertest = require('supertest');
 const R = require('ramda');
 
 const app = require('../../src/index');
-const {User, Course} = require('../../src/models/');
+const {User, Course, Review} = require('../../src/models/');
 const {propEq, onlyHasProps} = require('../../src/modules/assertions');
 
 const result = done => (err, res) => {
@@ -25,6 +25,11 @@ const guy = {
     fullName: 'Brago',
     emailAddress: '123@fake.com',
     password: 'abc123'
+};
+
+const review = {
+    rating: 5,
+    review: 'wow'
 };
 
 app.set('env', 'test');
@@ -241,7 +246,135 @@ describe('PUT /api/courses/:courseId', function() {
                     });
             });
     });
-    
+});
+
+describe('POST /api/courses/:courseId/reviews', function() {
+    it('returns 201 if Review is successfully added to the database', function(done) {
+        Course.create({title: 'test', description: 'test', user: user2._id})
+            .then(course => {
+                supertest(app)
+                    .post(`/api/courses/${course._id}/reviews`)
+                    .send(review)
+                    .auth(user3.emailAddress, guy.password)
+                    .expect('Location', `/api/courses/${course.id}`)
+                    .expect(201)
+                    .end((err, res) => {
+                        Course.deleteOne({_id: course._id})
+                            .then(() => Review.deleteOne(review))
+                            .then(() => {
+                                if (err) return done(err);
+                                return done();
+                            });
+                    });
+            });
+    });
+
+    it('returns 422 if a user tries to review their own course', function(done) {
+        Course.create({title: 'test', description: 'test', user: user2._id})
+            .then(course => {
+                supertest(app)
+                    .post(`/api/courses/${course._id}/reviews`)
+                    .send(review)
+                    .auth(user.emailAddress, user.password)
+                    .expect(422, {
+                        message: 'You cannot review your own course.',
+                        errors: {}
+                    })
+                    .end((err, res) => {
+                        Course.deleteOne({_id: course._id})
+                            .then(() => Review.deleteOne(review))
+                            .then(() => {
+                                if (err) return done(err);
+                                return done();
+                            });
+                    });
+            });
+    });
+
+    it('returns 422 if rating for review is less then min required', function(done) {
+        Course.create({title: 'test', description: 'test', user: user2._id})
+            .then(course => {
+                supertest(app)
+                    .post(`/api/courses/${course._id}/reviews`)
+                    .send({...review, rating: 0})
+                    .auth(guy.emailAddress, guy.password)
+                    .expect(propEq('message', 'Review validation failed'))
+                    .expect(onlyHasProps(['errors'], ['rating']))
+                    .expect(422)
+                    .end((err, res) => {
+                        Course.deleteOne({_id: course._id})
+                            .then(() => Review.deleteOne(review))
+                            .then(() => {
+                                if (err) return done(err);
+                                return done();
+                            });
+                    });
+            });
+    });
+
+    it('returns 422 if rating for review is more then max required', function(done) {
+        Course.create({title: 'test', description: 'test', user: user2._id})
+            .then(course => {
+                supertest(app)
+                    .post(`/api/courses/${course._id}/reviews`)
+                    .send({...review, rating: 6})
+                    .auth(guy.emailAddress, guy.password)
+                    .expect(propEq('message', "Review validation failed"))
+                    .expect(onlyHasProps(['errors'], ['rating']))
+                    .expect(422)
+                    .end((err, res) => {
+                        Course.deleteOne({_id: course._id})
+                            .then(() => Review.deleteOne(review))
+                            .then(() => {
+                                if (err) return done(err);
+                                return done();
+                            });
+                    });
+            });
+    });
+
+    it('returns 422 cast error if rating is not a number', function(done) {
+        Course.create({title: 'test', description: 'test', user: user2._id})
+            .then(course => {
+                supertest(app)
+                    .post(`/api/courses/${course._id}/reviews`)
+                    .send({...review, rating: 'k'})
+                    .auth(guy.emailAddress, guy.password)
+                    .expect(propEq('message', 'Review validation failed'))
+                    .expect(onlyHasProps(['errors'], ['rating']))
+                    .expect(422)
+                    .end((err, res) => {
+                        Course.deleteOne({_id: course._id})
+                            .then(() => Review.deleteOne(review))
+                            .then(() => {
+                                if (err) return done(err);
+                                return done();
+                            });
+                    });
+            });
+    });
+
+    it('returns 401 (no auth header)', function(done) {
+        Course.create({title: 'test', description: 'test', user: user2._id})
+            .then(course => {
+                supertest(app)
+                    .post(`/api/courses/${course._id}/reviews`)
+                    .send(review)
+                    .expect(401, {
+                        message: 'Failed to authenticate.',
+                        errors: {}
+                    })
+                    .end((err, res) => {
+                        Course.deleteOne({_id: course._id})
+                            .then(() => Review.deleteOne(review))
+                            .then(() => {
+                                if (err) return done(err);
+                                return done();
+                            });
+                    });
+            });
+    });
+
     after(function() {
         return Promise.all([
             User.deleteOne({emailAddress: user.emailAddress}),

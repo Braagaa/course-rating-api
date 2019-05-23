@@ -1,4 +1,6 @@
 const {Schema, model} = require('mongoose');
+const R = require('ramda');
+
 const {createError} = require('../modules/error-handling');
 
 const ReviewSchema = new Schema({
@@ -7,12 +9,11 @@ const ReviewSchema = new Schema({
     rating: {type: Number, required: true, min: 1, max: 5},
     review: String
 });
-ReviewSchema.pre('save', function(next) {
-    const {course, user} = this;
-    if (course.user._id === user._id) {
+
+ReviewSchema.static('createForCourse', function(user, course, data) {
+    if (user.id === course.user.id)
         throw createError('You cannot review your own course.', 422);
-    }
-    next();
+    return Review.create({...data, user});
 });
 
 const Review = model('Review', ReviewSchema);

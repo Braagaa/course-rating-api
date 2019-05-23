@@ -46,4 +46,15 @@ router.put('/:courseId', authUser, checkUsersCourse, (req, res, next) => {
         .catch(next);
 });
 
+router.post('/:courseId/reviews', authUser, (req, res, next) => {
+    const {course, user, body} = req;
+    return course.addReview(user, body)
+        .then(R.always(res))
+        .then(status(201))
+        .then(R.tap(set('Location', `/api/courses/${course.id}`)))
+        .then(end)
+        .catch(checkValidationError)
+        .catch(next);
+});
+
 module.exports = router;

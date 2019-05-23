@@ -1,4 +1,7 @@
 const {Schema, model} = require('mongoose');
+const R = require('ramda');
+
+const Review = require('./Review');
 
 const CourseSchema = new Schema({
     user: {type: Schema.Types.ObjectId, ref: 'User'},
@@ -36,6 +39,13 @@ CourseSchema.static('findPopulate', function(id) {
             populate: {path: 'user', select: 'fullName'}
         })
         .exec();
+});
+
+CourseSchema.method('addReview', function(user, data) {
+    return Review.createForCourse(user, this, data)
+        .then(R.objOf('reviews'))
+        .then(R.objOf('$push'))
+        .then(R.bind(this.updateOne, this));
 });
 
 const Course = model('Course', CourseSchema);
