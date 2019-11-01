@@ -21,7 +21,7 @@
     "bcrypt": "^3.0.6",
     "express": "^4.16.3",
     "isemail": "^3.2.0",
-    "mongoose": "^5.5.7",
+    "mongoose": "^5.7.5",
     "morgan": "^1.9.0",
     "ramda": "^0.26.1"
   }
